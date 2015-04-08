@@ -8,38 +8,33 @@ int PWMA = 3; //Speed control
 int AIN1 = 9; //Direction
 int AIN2 = 8; //Direction
 
-void setup(){
+void setup()
+{
   pinMode(STBY, OUTPUT);
 
   pinMode(PWMA, OUTPUT);
   pinMode(AIN1, OUTPUT);
   pinMode(AIN2, OUTPUT);
-
-  pinMode(PWMB, OUTPUT);
-  pinMode(BIN1, OUTPUT);
-  pinMode(BIN2, OUTPUT);
 }
 
-void loop(){
-  move(1, 255, 1); //motor 1, full speed, left
-  move(2, 255, 1); //motor 2, full speed, left
+void loop()
+{
+  move(1, 255, 1); //full speed, left
 
-  delay(1000); //go for 1 second
+  delay(2000); //go for 2 seconds
   stop(); //stop
   delay(250); //hold for 250ms until move again
 
-  move(1, 128, 0); //motor 1, half speed, right
-  move(2, 128, 0); //motor 2, half speed, right
+  move(1, 128, 0); //half speed, right
 
-  delay(1000);
+  delay(2000);
   stop();
   delay(250);
 }
 
-
-void move(int motor, int speed, int direction){
-//Move specific motor at speed and direction
-//motor: 0 for B 1 for A
+void move(int motor, int speed, int direction)
+{
+//Move motor at speed and direction
 //speed: 0 is off, and 255 is full speed
 //direction: 0 clockwise, 1 counter-clockwise
 
@@ -48,25 +43,30 @@ void move(int motor, int speed, int direction){
   boolean inPin1 = LOW;
   boolean inPin2 = HIGH;
 
-  if(direction == 1){
+  if (direction == 1) {
     inPin1 = HIGH;
     inPin2 = LOW;
   }
 
-  if(motor == 1){
-    digitalWrite(AIN1, inPin1);
-    digitalWrite(AIN2, inPin2);
-    analogWrite(PWMA, speed);
-  }else{
-    digitalWrite(BIN1, inPin1);
-    digitalWrite(BIN2, inPin2);
-    analogWrite(PWMB, speed);
-  }
+  digitalWrite(AIN1, inPin1);
+  digitalWrite(AIN2, inPin2);
+  analogWrite(PWMA, speed);
 }
 
+void brake()
+{
+  digitalWrite(AIN1, HIGH);
+  digitalWrite(AIN2, HIGH);
+}
 
+void stop()
+{
+  digitalWrite(AIN1, LOW);
+  digitalWrite(AIN2, LOW);
+}
 
-void stop(){
+void standby()
+{
 //enable standby  
   digitalWrite(STBY, LOW); 
 }
