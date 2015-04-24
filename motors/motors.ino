@@ -4,7 +4,6 @@ void setupMotors();
 void moveAll(int vel);
 void move(int motor, byte vel);
 
-
 // ================================================================
 // ===                       MAIN PROGRAM                       ===
 // ================================================================
@@ -97,20 +96,24 @@ void move(int motor, byte vel)
     analogWrite(PWM[motor], abs(vel));
 }
 
-// void brake()
-// {
-//     digitalWrite(AIN1, HIGH);
-//     digitalWrite(AIN2, HIGH);
-// }
+void brake()
+{
+    for (int i=0; i<3; i++) {
+        digitalWrite(IN1[i], HIGH);
+        digitalWrite(IN2[i], HIGH);
+    }
+}
 
-// void stop()
-// {
-//     digitalWrite(AIN1, LOW);
-//     digitalWrite(AIN2, LOW);
-// }
+void stop()
+{
+    for (int i=0; i<3; i++) {
+        digitalWrite(IN1[i], LOW);
+        digitalWrite(IN2[i], LOW);
+    }
+}
 
-// void standby()
-// {
-// //enable standby  
-//     digitalWrite(STBY, LOW); 
-// }
+void standby()
+{
+    //enable standby  
+    digitalWrite(STBY[i], LOW); 
+}
