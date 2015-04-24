@@ -63,13 +63,6 @@ MPU6050 mpu;
    http://code.google.com/p/arduino/issues/detail?id=958
  * ========================================================================= */
 
-// uncomment "OUTPUT_READABLE_WORLDACCEL" if you want to see acceleration
-// components with gravity removed and adjusted for the world frame of
-// reference (yaw is relative to initial orientation, since no magnetometer
-// is present in this case). Could be quite handy in some cases.
-#define OUTPUT_READABLE_WORLDACCEL
-
-
 #define LED_PIN 13 // (Arduino is 13, Teensy is 11, Teensy++ is 6)
 bool blinkState = false;
 
@@ -81,14 +74,7 @@ uint16_t packetSize;    // expected DMP packet size (default is 42 bytes)
 uint16_t fifoCount;     // count of all bytes currently in FIFO
 uint8_t fifoBuffer[64]; // FIFO storage buffer
 
-// orientation/motion vars
-Quaternion q;           // [w, x, y, z]         quaternion container
-VectorInt16 aa;         // [x, y, z]            accel sensor measurements
-VectorInt16 aaReal;     // [x, y, z]            gravity-free accel sensor measurements
-VectorInt16 aaWorld;    // [x, y, z]            world-frame accel sensor measurements
-VectorFloat gravity;    // [x, y, z]            gravity vector
-float euler[3];         // [psi, theta, phi]    Euler angle container
-float ypr[3];           // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
+VectorInt16 gyro;       // [x, y, z]            world-frame accel sensor measurements
 
 // INTERRUPT DETECTION ROUTINE
 volatile bool mpuInterrupt = false;     // indicates whether MPU interrupt pin has gone high
@@ -204,53 +190,14 @@ bool readMPU(byte &out)
     // (this lets us immediately read more without waiting for an interrupt)
     fifoCount -= packetSize;
 
-    #ifdef OUTPUT_READABLE_EULER
-        // display Euler angles in degrees
-        mpu.dmpGetQuaternion(&q, fifoBuffer);
-        mpu.dmpGetEuler(euler, &q);
-        Serial.print(":euler\t");
-        Serial.print(euler[0] * 180/M_PI);
-        Serial.print("\t");
-        Serial.print(euler[1] * 180/M_PI);
-        Serial.print("\t");
-        Serial.println(euler[2] * 180/M_PI);
-    #endif
-
-    #ifdef OUTPUT_READABLE_REALACCEL
-        // display real acceleration, adjusted to remove gravity
-        mpu.dmpGetQuaternion(&q, fifoBuffer);
-        mpu.dmpGetAccel(&aa, fifoBuffer);
-        mpu.dmpGetGravity(&gravity, &q);
-        mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
-        Serial.print("areal\t");
-        Serial.print(aaReal.x);
-        Serial.print("\t");
-        Serial.print(aaReal.y);
-        Serial.print("\t");
-        Serial.println(aaReal.z);
-    #endif
-
-    #ifdef OUTPUT_READABLE_WORLDACCEL
-        // display initial world-frame acceleration, adjusted to remove gravity
-        // and rotated based on known orientation from quaternion
-        mpu.dmpGetQuaternion(&q, fifoBuffer);
-        mpu.dmpGetAccel(&aa, fifoBuffer);
-        mpu.dmpGetGravity(&gravity, &q);
-        mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
-        mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
-        Serial.print("aworld\t");
-        Serial.print(aaWorld.x);
-        Serial.print("\t");
-        Serial.print(aaWorld.y);
-        Serial.print("\t");
-        Serial.println(aaWorld.z);
-    #endif
+    mpu.dmpGetGyro(&gyro, fifoBuffer);
+    Serial.write(gyro.z);
+    out = gyro.z;
 
     // blink LED to indicate activity
     blinkState = !blinkState;
     digitalWrite(LED_PIN, blinkState);
 
-    out = aaWorld.z;
     return true;
 }
 
