@@ -1,8 +1,13 @@
+void setupMPU();
+bool readMPU(int &out);
+void setupTransmitter();
+void sendData(byte *data);
+
 // ================================================================
 // ===                       MAIN PROGRAM                       ===
 // ================================================================
 
-int rot = 0;
+byte rot = 0;
 
 void setup() {
     setupMPU();
@@ -12,7 +17,7 @@ void setup() {
 void loop() {
     bool success = readMPU(rot);
     if (success)
-        sendData(&(byte)rot);
+        sendData(&rot);
 }
 
 // ================================================================
@@ -21,7 +26,7 @@ void loop() {
 
 // I2Cdev and MPU6050 must be installed as libraries, or else the .cpp/.h files
 // for both classes must be in the include path of your project
-#include "I2Cdev.h"
+#include <I2Cdev.h>
 
 #include "MPU6050_6Axis_MotionApps20.h"
 //#include "MPU6050.h" // not necessary if using MotionApps include file
@@ -162,7 +167,7 @@ void setupMPU()
     pinMode(LED_PIN, OUTPUT);
 }
 
-bool readMPU(int &out)
+bool readMPU(byte &out)
 {
     // if programming failed, don't try to do anything
     if (!dmpReady) return false;
@@ -265,11 +270,11 @@ void setupTransmitter()
     // Setup pins / SPI.
     Mirf.init();
     // Set the send (T for transmit) address. Must be 5 bytes.
-    Mirf.setTADDR((byte *)"chair");
+    Mirf.setTADDR((byte *)"mastr");
 
     // Set the payload length.
     // payload on client and server must be the same.
-    Mirf.payload = sizeof(int);
+    Mirf.payload = sizeof(byte);
     // Write channel and payload config then power up reciver.
     Mirf.config();
 }
