@@ -1,5 +1,5 @@
 void setupMPU();
-bool readMPU(int &out);
+bool readMPU(int8_t &out);
 void setupTransmitter();
 void sendData(byte *data);
 

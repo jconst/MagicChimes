@@ -2,12 +2,7 @@ void setupReceiver();
 bool recvData(byte *data);
 void setupMotors();
 void moveAll(int vel);
-void move(int motor, byte vel);
-
-#include <SPI.h>
-#include <Mirf.h>
-#include <nRF24L01.h>
-#include <MirfHardwareSpiDriver.h>
+void move(int motor, int8_t vel);
 
 // ================================================================
 // ===                       MAIN PROGRAM                       ===
@@ -33,6 +28,11 @@ void loop() {
 // ================================================================
 // ===                         RECEIVER                         ===
 // ================================================================
+
+#include <SPI.h>
+#include <Mirf.h>
+#include <nRF24L01.h>
+#include <MirfHardwareSpiDriver.h>
 
 void setupReceiver()
 {
@@ -92,8 +92,12 @@ void moveAll(int vel)
     }
 }
 
-void move(int motor, byte vel)
+void move(int motor, int8_t vel)
 {
+    Serial.print("moving motor ");
+    Serial.print(motor);
+    Serial.print(" with velocity ");
+    Serial.println(vel);
     digitalWrite(STBY[motor], HIGH); //disable standby
 
     boolean inVal1 = !(vel > 0);
@@ -101,7 +105,7 @@ void move(int motor, byte vel)
 
     digitalWrite(IN1[motor], inVal1);
     digitalWrite(IN2[motor], inVal2);
-    analogWrite(PWM[motor], abs(vel));
+    analogWrite(PWM[motor], abs(vel)*100);
 }
 
 void brake()
