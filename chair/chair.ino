@@ -7,17 +7,18 @@ void sendData(byte *data);
 // ===                       MAIN PROGRAM                       ===
 // ================================================================
 
-byte rot = 0;
 
 void setup() {
+    Serial.begin(57600);
     setupMPU();
     setupTransmitter();
 }
 
 void loop() {
+    int8_t rot = 0;
     bool success = readMPU(rot);
     if (success)
-        sendData(&rot);
+        sendData((byte *)&rot);
 }
 
 // ================================================================
@@ -63,9 +64,6 @@ MPU6050 mpu;
    http://code.google.com/p/arduino/issues/detail?id=958
  * ========================================================================= */
 
-#define LED_PIN 13 // (Arduino is 13, Teensy is 11, Teensy++ is 6)
-bool blinkState = false;
-
 // MPU control/status vars
 bool dmpReady = false;  // set true if DMP init was successful
 uint8_t mpuIntStatus;   // holds actual interrupt status byte from MPU
@@ -74,7 +72,7 @@ uint16_t packetSize;    // expected DMP packet size (default is 42 bytes)
 uint16_t fifoCount;     // count of all bytes currently in FIFO
 uint8_t fifoBuffer[64]; // FIFO storage buffer
 
-VectorInt16 gyro;       // [x, y, z]            world-frame accel sensor measurements
+VectorInt16 gyro;       // [x, y, z]
 
 // INTERRUPT DETECTION ROUTINE
 volatile bool mpuInterrupt = false;     // indicates whether MPU interrupt pin has gone high
@@ -91,12 +89,6 @@ void setupMPU()
     #elif I2CDEV_IMPLEMENTATION == I2CDEV_BUILTIN_FASTWIRE
         Fastwire::setup(400, true);
     #endif
-
-    // initialize serial communication
-    // (115200 chosen because it is required for Teapot Demo output, but it's
-    // really up to you depending on your project)
-    Serial.begin(57600);
-    while (!Serial); // wait for Leonardo enumeration, others continue immediately
 
     // initialize device
     Serial.println(F("Initializing I2C devices..."));
@@ -148,12 +140,9 @@ void setupMPU()
         Serial.print(devStatus);
         Serial.println(F(")"));
     }
-
-    // configure LED for output
-    pinMode(LED_PIN, OUTPUT);
 }
 
-bool readMPU(byte &out)
+bool readMPU(int8_t &out)
 {
     // if programming failed, don't try to do anything
     if (!dmpReady) return false;
@@ -190,13 +179,9 @@ bool readMPU(byte &out)
     // (this lets us immediately read more without waiting for an interrupt)
     fifoCount -= packetSize;
 
-    mpu.dmpGetGyro(&gyro, fifoBuffer);
-    Serial.write(gyro.z);
-    out = gyro.z;
-
-    // blink LED to indicate activity
-    blinkState = !blinkState;
-    digitalWrite(LED_PIN, blinkState);
+    mpu.dmpGetGyro(&gyro, fifoBuffer); // degrees per second
+    out = constrain(gyro.z / 10.0, -128, 127); //max of about 3.5 full rotations / second before overflowing
+    Serial.println(gyro.z);
 
     return true;
 }
@@ -212,6 +197,9 @@ bool readMPU(byte &out)
 
 void setupTransmitter()
 {
+    Mirf.csnPin = 7;
+    Mirf.cePin = 8;
+
     // Set the SPI (Serial Port Interface) Driver.
     Mirf.spi = &MirfHardwareSpi;
     // Setup pins / SPI.
@@ -222,12 +210,15 @@ void setupTransmitter()
     // Set the payload length.
     // payload on client and server must be the same.
     Mirf.payload = sizeof(byte);
+    Mirf.channel = 2;
     // Write channel and payload config then power up reciver.
     Mirf.config();
 }
 
 void sendData(byte *data)
 {
-    Mirf.send(data);
+    if (!Mirf.isSending()) {
+        Mirf.send(data);
+    }
 }
 

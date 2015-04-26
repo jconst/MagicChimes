@@ -4,34 +4,41 @@ void setupMotors();
 void moveAll(int vel);
 void move(int motor, byte vel);
 
+#include <SPI.h>
+#include <Mirf.h>
+#include <nRF24L01.h>
+#include <MirfHardwareSpiDriver.h>
+
 // ================================================================
 // ===                       MAIN PROGRAM                       ===
 // ================================================================
 
-byte rot = 0;
+int8_t rot = 0;
 
 void setup() {
+    Serial.begin(57600);
     setupReceiver();
     setupMotors();
 }
 
 void loop() {
-    bool success = recvData(&rot);
-    if (success)
+    bool success = recvData((byte *)&rot);
+    if (success) {
+        Serial.print("Got byte ");
+        Serial.println(rot);
         moveAll(rot);
+    }
 }
 
 // ================================================================
 // ===                         RECEIVER                         ===
 // ================================================================
 
-#include <SPI.h>
-#include <Mirf.h>
-#include <nRF24L01.h>
-#include <MirfHardwareSpiDriver.h>
-
 void setupReceiver()
 {
+    Mirf.csnPin = 7;
+    Mirf.cePin = 8;
+
     // Set the SPI (Serial Port Interface) Driver.
     Mirf.spi = &MirfHardwareSpi;
     // Setup pins / SPI.
@@ -41,7 +48,8 @@ void setupReceiver()
 
     // Set the payload length.
     // payload on client and server must be the same.
-    Mirf.payload = sizeof(int);
+    Mirf.payload = sizeof(byte);
+    Mirf.channel = 2;
     // Write channel and payload config then power up reciver.
     Mirf.config();
 }
@@ -50,8 +58,8 @@ bool recvData(byte *data)
 {
     if (!Mirf.dataReady()) return false;
 
-    Serial.println("Got packet");  
     Mirf.getData(data);
+    return true;
 }
 
 // ================================================================
@@ -60,11 +68,11 @@ bool recvData(byte *data)
 
 const int numMotors = 3;
 
-int STBY[numMotors] = {2, 2, 3}; //standby
+int STBY[numMotors] = {28, 28, 42}; //standby
 
-int IN1[numMotors] = {4, 7, 10}; //Direction
-int IN2[numMotors] = {5, 8, 11}; //Direction
-int PWM[numMotors] = {6, 9, 12}; //Speed control
+int IN1[numMotors] = {26, 30, 40}; //Direction
+int IN2[numMotors] = {24, 32, 38}; //Direction
+int PWM[numMotors] = {22, 34, 36}; //Speed control
 
 void setupMotors()
 {
@@ -114,6 +122,8 @@ void stop()
 
 void standby()
 {
-    //enable standby  
-    digitalWrite(STBY[i], LOW); 
+    for (int i=0; i<3; i++) {
+        //enable standby  
+        digitalWrite(STBY[i], LOW);
+    } 
 }
