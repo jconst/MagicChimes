@@ -94,10 +94,6 @@ void moveAll(int vel)
 
 void move(int motor, int8_t vel)
 {
-    Serial.print("moving motor ");
-    Serial.print(motor);
-    Serial.print(" with velocity ");
-    Serial.println(vel);
     digitalWrite(STBY[motor], HIGH); //disable standby
 
     boolean inVal1 = !(vel > 0);
@@ -105,7 +101,7 @@ void move(int motor, int8_t vel)
 
     digitalWrite(IN1[motor], inVal1);
     digitalWrite(IN2[motor], inVal2);
-    analogWrite(PWM[motor], abs(vel)*100);
+    analogWrite(PWM[motor], abs(vel)*25);
 }
 
 void brake()

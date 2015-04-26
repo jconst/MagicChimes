@@ -15,10 +15,28 @@ void setup() {
 }
 
 void loop() {
+    static bool isSitting = false;
+    if (isSitting != checkSitting()) {
+        isSitting = !isSitting;
+        int8_t data = isSitting ? 127 : -128;
+        sendData((byte *)&data);
+    }
+
     int8_t rot = 0;
     bool success = readMPU(rot);
     if (success)
         sendData((byte *)&rot);
+}
+
+// ================================================================
+// ===                        IR SENSOR                         ===
+// ================================================================
+
+bool checkSitting()
+{
+    const int thresh = 150;
+    int val = analogRead(1);
+    return val < thresh;
 }
 
 // ================================================================
@@ -180,8 +198,7 @@ bool readMPU(int8_t &out)
     fifoCount -= packetSize;
 
     mpu.dmpGetGyro(&gyro, fifoBuffer); // degrees per second
-    out = constrain(gyro.z / 10.0, -128, 127); //max of about 3.5 full rotations / second before overflowing
-    Serial.println(gyro.z);
+    out = constrain(gyro.z / 10.0, -127, 126); //max of about 3.5 full rotations / second before overflowing
 
     return true;
 }
