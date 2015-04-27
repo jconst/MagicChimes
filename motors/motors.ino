@@ -38,7 +38,7 @@ void loop() {
         ind = (ind+1) % listSize;
         
         curSpeed += ((float)recvd / 60.0);
-        curSpeed -= 0.05 * SIGN(curSpeed);
+        curSpeed -= 0.07 * SIGN(curSpeed);
         curSpeed = constrain(curSpeed, -70.0, 70.0);
         float normSpeed = norm(curSpeed);
         float tapered = pow(abs(normSpeed), 0.4) * SIGN(curSpeed);
