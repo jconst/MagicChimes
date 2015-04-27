@@ -16,6 +16,10 @@ void turn();
 int8_t recvd = 0;
 float curSpeed = 0;
 
+const int listSize = 10;
+int8_t recentRecvs[listSize] = {0};
+int ind = 0;
+
 void setup() {
     Serial.begin(57600);
     setupReceiver();
@@ -25,26 +29,52 @@ void setup() {
 void loop() {
     bool success = recvData((byte *)&recvd);
     if (success) {
+        if (recvd == -128 || recvd == 127) return;
         recvd = -recvd; //CCW is + to CW is +
-        curSpeed += ((float)recvd / 100.0);
-        curSpeed -= 0.1 * SIGN(curSpeed);
+        
+        Serial.println(recvd);
+        
+        recentRecvs[ind] = recvd;
+        ind = (ind+1) % listSize;
+        
+        curSpeed += ((float)recvd / 60.0);
+        curSpeed -= 0.05 * SIGN(curSpeed);
         curSpeed = constrain(curSpeed, -70.0, 70.0);
         float normSpeed = norm(curSpeed);
         float tapered = pow(abs(normSpeed), 0.4) * SIGN(curSpeed);
-        Serial.println(tapered);
         int8_t final = denorm(tapered);
-        if (abs(final) < 10) {
-            final = 0;
-            standby();
-        }
+        // if they stood up:
+//        if (recvd == -128) {
+//            stop();
+//            curSpeed = 0;
+//        }
+        // handle turns:
         if (SIGN(curSpeed) != SIGN(recvd) &&
-            abs(curSpeed) > 20 && abs(recvd) > 2) {
+            abs(curSpeed) > 15 && abs(recvd) > 1 &&
+            signsMatch()) {
+            Serial.println("TURN!");
             curSpeed = -curSpeed;        
             turn();
+        } 
+        // if they're moving too slow:
+        else if (abs(final) < 10) {
+            final = 0;
+            standby();
         } else {
             moveAll(final);
         }
     }
+}
+
+bool signsMatch()
+{
+    int firstSign = SIGN(recentRecvs[0]);
+    for (int i=0; i < listSize; ++i) {
+        if (SIGN(recentRecvs[i]) != firstSign) {
+            return false;
+        } 
+    }
+    return true;
 }
 
 // ================================================================
