@@ -1,7 +1,7 @@
 void setupMPU();
 bool readMPU(int8_t &out);
 void setupTransmitter();
-void sendData(byte *data);
+bool sendData(byte *data);
 
 // ================================================================
 // ===                       MAIN PROGRAM                       ===
@@ -10,6 +10,7 @@ void sendData(byte *data);
 
 void setup() {
     Serial.begin(57600);
+    pinMode(A1, INPUT);
     setupMPU();
     setupTransmitter();
 }
@@ -19,7 +20,7 @@ void loop() {
     if (isSitting != checkSitting()) {
         isSitting = !isSitting;
         int8_t data = isSitting ? 127 : -128;
-        sendData((byte *)&data);
+        forceSend((byte *)&data);
     }
 
     int8_t rot = 0;
@@ -36,6 +37,7 @@ bool checkSitting()
 {
     const int thresh = 150;
     int val = analogRead(1);
+    Serial.println(val);
     return val < thresh;
 }
 
@@ -232,10 +234,17 @@ void setupTransmitter()
     Mirf.config();
 }
 
-void sendData(byte *data)
+bool sendData(byte *data)
 {
     if (!Mirf.isSending()) {
         Mirf.send(data);
+        return true;
     }
+    return false;
+}
+
+void forceSend(byte *data)
+{
+    while (!sendData(data));
 }
 

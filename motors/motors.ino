@@ -19,8 +19,9 @@ void setup() {
 void loop() {
     bool success = recvData((byte *)&rot);
     if (success) {
-        Serial.print("Got byte ");
-        Serial.println(rot);
+        if (rot == 127 || rot == -128) {
+            Serial.println(rot);
+        }
         moveAll(rot);
     }
 }
