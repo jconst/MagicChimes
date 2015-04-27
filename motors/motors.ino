@@ -3,12 +3,17 @@ bool recvData(byte *data);
 void setupMotors();
 void moveAll(int vel);
 void move(int motor, int8_t vel);
+float norm(float x);
+int8_t denorm(float x);
+
+#define SIGN(X) ((X < 0) ? -1 : ((X > 0) ? 1 : 0))
 
 // ================================================================
 // ===                       MAIN PROGRAM                       ===
 // ================================================================
 
-int8_t rot = 0;
+int8_t recvd = 0;
+float curSpeed = 0;
 
 void setup() {
     Serial.begin(57600);
@@ -17,13 +22,21 @@ void setup() {
 }
 
 void loop() {
-    bool success = recvData((byte *)&rot);
+    bool success = recvData((byte *)&recvd);
     if (success) {
-        if (rot == 127 || rot == -128) {
-            Serial.println(rot);
-        }
-        moveAll(rot);
+        recvd *= -1;
+        curSpeed += ((float)recvd / 100.0);
+        curSpeed -= 0.1 * SIGN(curSpeed);
+        curSpeed = constrain(curSpeed, -70.0, 70.0);
     }
+    float normSpeed = norm(curSpeed);
+    float tapered = pow(normSpeed, 0.4);
+    int8_t final = denorm(tapered);
+    if (abs(final) < 10) {
+        final = 0;
+        standby();
+    }
+    moveAll(final);
 }
 
 // ================================================================
@@ -72,8 +85,8 @@ const int numMotors = 3;
 int STBY = 16; //standby
 
 int IN1[numMotors] = {7, 2, 17}; //Direction
-int IN2[numMotors] = {6, 3, 18}; //Direction
-int PWM[numMotors] = {5, 4, 19}; //Speed control
+int IN2[numMotors] = {6, 4, 18}; //Direction
+int PWM[numMotors] = {5, 3, 10}; //Speed control
 
 void setupMotors()
 {
@@ -95,14 +108,15 @@ void moveAll(int vel)
     }
 }
 
-void move(int motor, int8_t vel)
+void move(int motor, int vel)
 {
     boolean inVal1 = !(vel > 0);
     boolean inVal2 =  (vel > 0);
 
     digitalWrite(IN1[motor], inVal1);
     digitalWrite(IN2[motor], inVal2);
-    analogWrite(PWM[motor], abs(vel)*25);
+    analogWrite(PWM[motor], (int)(abs(vel)*2.55));
+    Serial.println((int)(abs(vel)*2.55));
 }
 
 void brake()
@@ -125,4 +139,18 @@ void standby()
 {
     //enable standby  
     digitalWrite(STBY, LOW);
+}
+
+// ================================================================
+// ===                          HELPERS                         ===
+// ================================================================
+
+float norm(float x)
+{
+    return (float)x / 100.0;
+}
+
+int8_t denorm(float x)
+{
+    return (int8_t)(x * 100);
 }
