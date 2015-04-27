@@ -5,6 +5,7 @@ void moveAll(int vel);
 void move(int motor, int8_t vel);
 float norm(float x);
 int8_t denorm(float x);
+void turn();
 
 #define SIGN(X) ((X < 0) ? -1 : ((X > 0) ? 1 : 0))
 
@@ -24,19 +25,26 @@ void setup() {
 void loop() {
     bool success = recvData((byte *)&recvd);
     if (success) {
-        recvd *= -1;
+        recvd = -recvd; //CCW is + to CW is +
         curSpeed += ((float)recvd / 100.0);
         curSpeed -= 0.1 * SIGN(curSpeed);
         curSpeed = constrain(curSpeed, -70.0, 70.0);
+        float normSpeed = norm(curSpeed);
+        float tapered = pow(abs(normSpeed), 0.4) * SIGN(curSpeed);
+        Serial.println(tapered);
+        int8_t final = denorm(tapered);
+        if (abs(final) < 10) {
+            final = 0;
+            standby();
+        }
+        if (SIGN(curSpeed) != SIGN(recvd) &&
+            abs(curSpeed) > 20 && abs(recvd) > 2) {
+            curSpeed = -curSpeed;        
+            turn();
+        } else {
+            moveAll(final);
+        }
     }
-    float normSpeed = norm(curSpeed);
-    float tapered = pow(normSpeed, 0.4);
-    int8_t final = denorm(tapered);
-    if (abs(final) < 10) {
-        final = 0;
-        standby();
-    }
-    moveAll(final);
 }
 
 // ================================================================
@@ -116,7 +124,6 @@ void move(int motor, int vel)
     digitalWrite(IN1[motor], inVal1);
     digitalWrite(IN2[motor], inVal2);
     analogWrite(PWM[motor], (int)(abs(vel)*2.55));
-    Serial.println((int)(abs(vel)*2.55));
 }
 
 void brake()
@@ -139,6 +146,12 @@ void standby()
 {
     //enable standby  
     digitalWrite(STBY, LOW);
+}
+
+void turn()
+{
+    brake();
+    delay(250);
 }
 
 // ================================================================
