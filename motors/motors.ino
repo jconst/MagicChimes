@@ -36,8 +36,8 @@ void loop() {
 
 void setupReceiver()
 {
-    Mirf.csnPin = 7;
-    Mirf.cePin = 8;
+    Mirf.csnPin = 8;
+    Mirf.cePin = 9;
 
     // Set the SPI (Serial Port Interface) Driver.
     Mirf.spi = &MirfHardwareSpi;
@@ -68,17 +68,17 @@ bool recvData(byte *data)
 
 const int numMotors = 3;
 
-int STBY[numMotors] = {28, 28, 42}; //standby
+int STBY = 16; //standby
 
-int IN1[numMotors] = {26, 30, 40}; //Direction
-int IN2[numMotors] = {24, 32, 38}; //Direction
-int PWM[numMotors] = {22, 34, 36}; //Speed control
+int IN1[numMotors] = {7, 2, 17}; //Direction
+int IN2[numMotors] = {6, 3, 18}; //Direction
+int PWM[numMotors] = {5, 4, 19}; //Speed control
 
 void setupMotors()
 {
-    for (int i=0; i<3; i++) {
-        pinMode(STBY[i], OUTPUT);
+    pinMode(STBY, OUTPUT);
 
+    for (int i=0; i<3; i++) {
         pinMode(PWM[i], OUTPUT);
         pinMode(IN1[i], OUTPUT);
         pinMode(IN2[i], OUTPUT);
@@ -87,6 +87,8 @@ void setupMotors()
 
 void moveAll(int vel)
 {
+    digitalWrite(STBY, HIGH); //disable standby
+
     for (int i=0; i<3; i++) {
         move(i, vel);
     }
@@ -94,8 +96,6 @@ void moveAll(int vel)
 
 void move(int motor, int8_t vel)
 {
-    digitalWrite(STBY[motor], HIGH); //disable standby
-
     boolean inVal1 = !(vel > 0);
     boolean inVal2 =  (vel > 0);
 
@@ -122,8 +122,6 @@ void stop()
 
 void standby()
 {
-    for (int i=0; i<3; i++) {
-        //enable standby  
-        digitalWrite(STBY[i], LOW);
-    } 
+    //enable standby  
+    digitalWrite(STBY, LOW);
 }
