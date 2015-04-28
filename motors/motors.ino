@@ -37,8 +37,8 @@ void loop() {
         recentRecvs[ind] = recvd;
         ind = (ind+1) % listSize;
         
-        curSpeed += ((float)recvd / 60.0);
-        curSpeed -= 0.07 * SIGN(curSpeed);
+        curSpeed += ((float)recvd / 70.0);
+        curSpeed -= 0.1 * SIGN(curSpeed);
         curSpeed = constrain(curSpeed, -70.0, 70.0);
         float normSpeed = norm(curSpeed);
         float tapered = pow(abs(normSpeed), 0.4) * SIGN(curSpeed);
@@ -61,7 +61,7 @@ void loop() {
             final = 0;
             standby();
         } else {
-            moveAll(final);
+            moveAll(-final);
         }
     }
 }
@@ -151,11 +151,13 @@ void move(int motor, int vel)
     boolean inVal1 = !(vel > 0);
     boolean inVal2 =  (vel > 0);
 
+    Serial.println(vel > 0 ? "greater" : "less");
+
     // big motor
     if (motor == 0) {
-        vel *= 1.6;
+        vel *= (vel > 0 ? 2 : 3);
     } else if (motor == 2) {
-        vel *= 0.65;
+        vel *= 0.7;
     }
 
     digitalWrite(IN1[motor], inVal1);
