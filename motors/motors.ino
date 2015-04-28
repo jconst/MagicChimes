@@ -160,7 +160,7 @@ void move(int motor, int vel)
 
     digitalWrite(IN1[motor], inVal1);
     digitalWrite(IN2[motor], inVal2);
-    analogWrite(PWM[motor], (int)(abs(vel)*2.55));
+    analogWrite(PWM[motor], (int)(min(abs(vel)*2.55, 255)));
 }
 
 void brake()
