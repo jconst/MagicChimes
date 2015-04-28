@@ -151,6 +151,13 @@ void move(int motor, int vel)
     boolean inVal1 = !(vel > 0);
     boolean inVal2 =  (vel > 0);
 
+    // big motor
+    if (motor == 0) {
+        vel *= 1.6;
+    } else if (motor == 2) {
+        vel *= 0.65;
+    }
+
     digitalWrite(IN1[motor], inVal1);
     digitalWrite(IN2[motor], inVal2);
     analogWrite(PWM[motor], (int)(abs(vel)*2.55));
